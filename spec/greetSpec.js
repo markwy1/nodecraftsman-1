@@ -9,7 +9,7 @@ describe('greet', function() {
   });
 
   it('should greet no one special if no name is given', function() {
-    expect(greet()).toEqual('Hello world');
+    expect(greet()).toEqual('Hello world!');
   });
 
 });
