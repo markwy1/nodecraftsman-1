@@ -1,13 +1,15 @@
 'use strict';
 
 var fs = require('fs');
+var util = require('util');
+var EventEmitter = require('events').EventEmitter;
 
 var FileSizeWatcher = function(path) {
   var self = this;
-  self.callbacks = {};
+
   if (/^\//.test(path) === false) {
     process.nextTick(function() {
-      self.callbacks['error']("Path does not start with a slash.");
+      self.emit('error', "Path does not start with a slash.");
     });
     return;
   };
@@ -20,21 +22,18 @@ var FileSizeWatcher = function(path) {
     function() {
       fs.stat(path, function(err, stats) {
         if(stats.size > self.lastfilesize) {
-          self.callbacks['grew'](stats.size - self.lastfilesize);
+          self.emit('grew', stats.size - self.lastfilesize);
           self.lastfilesize = stats.size;
         }
         if (stats.size < self.lastfilesize) {
-          self.callbacks['shrank'](self.lastfilesize - stats.size);
+          self.emit('shrank', self.lastfilesize - stats.size);
           self.lastfilesize = stats.size;
         };
       }, 1000);
-    }
-  );
+    });
 };
 
-FileSizeWatcher.prototype.on = function(eventType, callback) {
-  this.callbacks[eventType] = callback;
-}
+util.inherits(FileSizeWatcher, EventEmitter);
 
 FileSizeWatcher.prototype.stop = function() {
   clearInterval(this.interval);
